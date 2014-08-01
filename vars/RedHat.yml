@@ -1,0 +1,13 @@
+---
+mysql_pkgs: 
+  - libselinux-python
+  - MySQL-python
+  - mysql-server
+  - mysqltuner    
+  # needed by innotop
+  - perl-TermReadKey
+  - maatkit
+
+mysql_service: mysqld
+mysql_conf_dir: "/etc/"
+

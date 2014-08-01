@@ -1,0 +1,10 @@
+---
+mysql_opts: []
+#  key_buffer: "16M"
+#  max_allowed_packet: "16M"
+#  query_cache_limit: "1M"
+#  query_cache_size: "16M"
+#  long_query_time: "0.5"
+#  innodb_buffer_pool_size: "128M"
+#  bind_address: "127.0.0.1"
+#  max_connections: 100

@@ -1,0 +1,46 @@
+---
+mysql_pkgs_6: 
+  - python-selinux
+  - python-mysqldb
+  - mysql-server
+  - mysql-server-5.1
+  - mysqltuner    
+  # needed by innotop
+  - libterm-readkey-perl
+  - maatkit
+
+mysql_pkgs_7: 
+  - python-selinux
+  - python-mysqldb
+  - mysql-server
+  - mysql-server-5.5
+  - mysqltuner    
+  # needed by innotop
+  - libterm-readkey-perl
+  - percona-toolkit
+
+# Ubuntu 12.04
+mysql_pkgs_12: 
+  - python-selinux
+  - python-mysqldb
+  - mysql-server
+  - mysql-server-5.5
+  - mysqltuner    
+  # needed by innotop
+  - libterm-readkey-perl
+  - percona-toolkit
+
+# Ubuntu 13.10
+mysql_pkgs_13: 
+  - python-selinux
+  - python-mysqldb
+  - mysql-server
+  - mysql-server-5.5
+  - mysqltuner    
+  # needed by innotop
+  - libterm-readkey-perl
+  - percona-toolkit
+
+mysql_service: mysql
+mysql_conf_dir: "/etc/mysql/"
+

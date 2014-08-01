@@ -1,0 +1,74 @@
+---
+- name: Load the OS specific variables
+  tags: mysql
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install the mysql packages in Redhat derivates
+  tags: mysql
+  yum: name={{ item }} state=present
+  with_items: mysql_pkgs
+  when: ansible_os_family == 'RedHat'
+
+- name: Install the mysql packages in Debian derivates
+  tags: mysql
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time=600
+  with_items: mysql_pkgs_{{ ansible_lsb.major_release }}
+  environment: 
+    # prevent mysql from autostart after installation
+    RUNLEVEL: 1
+  when: ansible_os_family == 'Debian'
+
+- name: Load mysql config file
+  tags: mysql
+  template: src=my.cnf.{{ ansible_os_family }}.j2 dest={{ mysql_conf_dir }}/my.cnf owner=root group=root mode=0644
+  notify: 
+    - restart mysql
+
+- name: Start the mysql service
+  tags: mysql
+  service: name={{ mysql_service }} state=started enabled=yes
+
+# security hardening
+- name: update mysql root password for all root accounts
+  tags: 
+    - mysql
+    - mysql_passwords
+  mysql_user: name=root host={{ item }} password={{ lookup('password', inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password') }}
+  with_items:
+   - "{{ ansible_hostname }}"
+   - 127.0.0.1
+   - ::1
+   - localhost
+  when: ansible_hostname != 'localhost'
+
+- name: update mysql root password for all root accounts
+  tags:
+    - mysql
+    - mysql_passwords
+  mysql_user: name=root host={{ item }} password={{ lookup('password', inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password') }}
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+  when: ansible_hostname == 'localhost'
+
+- name: copy .my.cnf file with root password credentials
+  tags: 
+    - mysql
+    - mysql_passwords
+  template: src=.my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
+  with_password:
+    - "{{ inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password' }}"
+
+- name: ensure anonymous users are not in the database
+  tags: mysql
+  mysql_user: name='' host={{ item }} state=absent
+  with_items:
+   - localhost
+   - "{{ ansible_hostname }}"
+   
+- name: remove the test database
+  tags: mysql
+  mysql_db: name=test state=absent
+# end of security hardening
+
