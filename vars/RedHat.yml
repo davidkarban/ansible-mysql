@@ -1,5 +1,5 @@
 ---
-mysql_pkgs: 
+mysql_pkgs_6: 
   - libselinux-python
   - MySQL-python
   - mysql-server
@@ -8,6 +8,14 @@ mysql_pkgs:
   - perl-TermReadKey
   - maatkit
 
-mysql_service: mysqld
+mysql_pkgs:
+  - libselinux-python
+  - MySQL-python
+  - mariadb-server
+#  - mysqltuner    
+  # needed by innotop
+  - perl-TermReadKey
+
+mysql_service: mariadb
 mysql_conf_dir: "/etc/"
 

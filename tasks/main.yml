@@ -6,69 +6,32 @@
 - name: Install the mysql packages in Redhat derivates
   tags: mysql
   yum: name={{ item }} state=present
-  with_items: mysql_pkgs
+  with_items: "{{ mysql_pkgs }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Install the mysql packages in Debian derivates
   tags: mysql
   apt: name={{ item }} state=present update_cache=yes cache_valid_time=600
-  with_items: mysql_pkgs_{{ ansible_lsb.major_release }}
+  with_items: "{{ mysql_pkgs }}"
   environment: 
     # prevent mysql from autostart after installation
     RUNLEVEL: 1
   when: ansible_os_family == 'Debian'
 
+- name: Get mysql version
+  tags: mysql
+  always_run: true
+  changed_when: false
+  shell: mysql -V | sed -e "s/mysql  Ver [.0-9]* Distrib \([0-9]\)\.\([0-9]\)\.\([0-9]\{1,3\}\).*/\1\2/g"
+  register: mysql_version
+
 - name: Load mysql config file
   tags: mysql
-  template: src=my.cnf.{{ ansible_os_family }}.j2 dest={{ mysql_conf_dir }}/my.cnf owner=root group=root mode=0644
+  template: src=my.cnf.{{ ansible_os_family }}.j2 dest={{ mysql_conf_dir }}/my.cnf owner=root group=root mode=0644 backup=yes
   notify: 
     - restart mysql
 
 - name: Start the mysql service
   tags: mysql
   service: name={{ mysql_service }} state=started enabled=yes
-
-# security hardening
-- name: update mysql root password for all root accounts
-  tags: 
-    - mysql
-    - mysql_passwords
-  mysql_user: name=root host={{ item }} password={{ lookup('password', inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password') }}
-  with_items:
-   - "{{ ansible_hostname }}"
-   - 127.0.0.1
-   - ::1
-   - localhost
-  when: ansible_hostname != 'localhost'
-
-- name: update mysql root password for all root accounts
-  tags:
-    - mysql
-    - mysql_passwords
-  mysql_user: name=root host={{ item }} password={{ lookup('password', inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password') }}
-  with_items:
-   - 127.0.0.1
-   - ::1
-   - localhost
-  when: ansible_hostname == 'localhost'
-
-- name: copy .my.cnf file with root password credentials
-  tags: 
-    - mysql
-    - mysql_passwords
-  template: src=.my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
-  with_password:
-    - "{{ inventory_dir + '/credentials/' + ansible_fqdn + '/mysql_root_password' }}"
-
-- name: ensure anonymous users are not in the database
-  tags: mysql
-  mysql_user: name='' host={{ item }} state=absent
-  with_items:
-   - localhost
-   - "{{ ansible_hostname }}"
-   
-- name: remove the test database
-  tags: mysql
-  mysql_db: name=test state=absent
-# end of security hardening
 
